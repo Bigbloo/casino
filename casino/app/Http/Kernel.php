@@ -19,7 +19,9 @@ namespace VanguardLTE\Http
                 'VanguardLTE\Http\Middleware\VerifyCsrfToken', 
                 'Illuminate\Routing\Middleware\SubstituteBindings', 
                 'VanguardLTE\Http\Middleware\SelectLanguage',
-                'VanguardLTE\Http\Middleware\ForceShopOne'
+                'VanguardLTE\Http\Middleware\ForceShopOne',
+                // Phase 4: Rate limiting for all web routes (120 req/min in production)
+                'throttle:120,1',
             ], 
             'api' => [
                 'VanguardLTE\Http\Middleware\UseApiGuard', 
@@ -49,7 +51,10 @@ namespace VanguardLTE\Http
             'checker' => 'VanguardLTE\Http\Middleware\Checker', 
             '2fa' => 'PragmaRX\Google2FALaravel\Middleware',
             'disable.legacy' => 'VanguardLTE\Http\Middleware\DisableLegacyFeatures',
-            'game.homebutton' => 'VanguardLTE\Http\Middleware\InjectGameHomeButton'
+            'game.homebutton' => 'VanguardLTE\Http\Middleware\InjectGameHomeButton',
+            // Phase 4: Named throttle middleware for specific routes
+            'throttle.login' => 'Illuminate\Routing\Middleware\ThrottleRequests:5,1',
+            'throttle.deposit' => 'Illuminate\Routing\Middleware\ThrottleRequests:10,1',
         ];
     }
 

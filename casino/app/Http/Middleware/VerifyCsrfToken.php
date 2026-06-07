@@ -10,7 +10,10 @@ namespace VanguardLTE\Http\Middleware
             '/payment/btcpayserver/result', 
             '/sms/callback', 
             '/profile/contact',
-            'register'
+            'register',
+            // Stripe webhooks must bypass CSRF
+            '/stripe/webhook',
+            '/payment/webhook/stripe',
         ];
     }
 

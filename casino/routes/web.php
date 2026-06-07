@@ -1,5 +1,25 @@
 <?php
 use Illuminate\Support\Facades\Route;
+use VanguardLTE\Http\Controllers\PaymentController;
+
+/*
+|--------------------------------------------------------------------------
+| Stripe Deposit Routes (Phase 2 - Cashier Integration)
+|--------------------------------------------------------------------------
+*/
+Route::middleware(['auth', 'siteisclosed', 'checker', 'throttle:10,1'])->group(function () {
+    Route::get('/deposit/{userId}/{amount}', [PaymentController::class, 'checkout'])->name('deposit.checkout');
+    Route::get('/deposit/success', [PaymentController::class, 'success'])->name('deposit.success');
+    Route::get('/deposit/cancel', [PaymentController::class, 'cancel'])->name('deposit.cancel');
+});
+
+// Stripe Webhook (no auth, no CSRF - handled in VerifyCsrfToken exceptions)
+Route::post('/stripe/webhook', [PaymentController::class, 'webhookStripe'])->name('stripe.webhook');
+
+// PWA Offline page (Phase 3)
+Route::get('/offline', function () {
+    return view('frontend.Minimal.pages.offline');
+})->name('pwa.offline');
 
 Route::namespace ('Frontend')->middleware(['siteisclosed', 'checker'])->group(function ()
 {
