@@ -19,8 +19,29 @@ class User
         return $user;
     }
 
-    public function creditBalance(int $amountCents): void
+    public static function find(int $userId): ?self
+    {
+        return self::findOrFail($userId);
+    }
+
+    public function creditBalance(int $amountCents, ?string $reference = null): void
     {
         $this->balance_cents += $amountCents;
+    }
+
+    public function transactions()
+    {
+        return new class
+        {
+            public function where(string $column, string $value): self
+            {
+                return $this;
+            }
+
+            public function exists(): bool
+            {
+                return false;
+            }
+        };
     }
 }
