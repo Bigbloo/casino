@@ -11,6 +11,7 @@ namespace VanguardLTE\Http\Middleware
             '/sms/callback', 
             '/profile/contact',
             'register',
+            '/register',
             // Stripe webhooks must bypass CSRF
             '/stripe/webhook',
             '/payment/webhook/stripe',

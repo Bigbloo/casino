@@ -34,7 +34,7 @@ class PaymentController extends Controller
             return back()->withErrors(['amount' => 'Le montant doit être compris entre 1 € et 10 000 €.']);
         }
 
-        $secretKey = config('payments.drivers.stripe.secret_key') ?: env('STRIPE_SECRET');
+        $secretKey = config('payments.drivers.stripe.secret_key') ?: env('STRIPE_SECRET_KEY') ?: env('STRIPE_SECRET');
         if (!$secretKey) {
             return back()->withErrors(['stripe' => 'Stripe n\'est pas configuré.']);
         }
@@ -155,20 +155,27 @@ class PaymentController extends Controller
         }
 
         DB::transaction(function () use ($intent, $sessionId) {
+            // Lock the user row and read balance before crediting
+            $user = DB::table('users')->where('id', $intent->user_id)->lockForUpdate()->first();
+            $balanceBefore = $user ? (float) $user->balance : 0.0;
+            $balanceAfter  = $balanceBefore + (float) $intent->amount;
+
             // Credit the user's balance
             DB::table('users')
                 ->where('id', $intent->user_id)
                 ->increment('balance', $intent->amount);
 
-            // Record the transaction
+            // Record the transaction (matches w_transactions schema)
             DB::table('transactions')->insert([
-                'user_id'    => $intent->user_id,
-                'amount'     => $intent->amount,
-                'type'       => 'deposit',
-                'source'     => 'stripe',
-                'note'       => 'Stripe session ' . $sessionId,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'user_id'        => $intent->user_id,
+                'direction'      => 'add',
+                'amount'         => $intent->amount,
+                'balance_before' => $balanceBefore,
+                'balance_after'  => $balanceAfter,
+                'source'         => 'stripe',
+                'note'           => 'Stripe session ' . $sessionId,
+                'created_at'     => now(),
+                'updated_at'     => now(),
             ]);
 
             // Mark intent as completed

@@ -64,18 +64,21 @@ php artisan migrate
 Replace with your **live** keys from [Stripe Dashboard](https://dashboard.stripe.com/apikeys):
 
 ```env
-# Cashier
+# Cashier (Laravel Cashier standard keys)
 STRIPE_KEY=pk_live_...
 STRIPE_SECRET=sk_live_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 CASHIER_CURRENCY=eur
 CASHIER_CURRENCY_LOCALE=fr
 
-# Existing payment driver
+# Payment driver config (used by PaymentController & payments.php)
 STRIPE_ENABLED=true
 STRIPE_PUBLIC_KEY=pk_live_...
-STRIPE_SECRET_KEY=sk_live_...
+STRIPE_SECRET_KEY=sk_live_...   # <-- This is the primary key used by PaymentController
 ```
+
+> **Note:** `STRIPE_SECRET_KEY` (used by `config/payments.php`) and `STRIPE_SECRET` (Cashier standard)
+> should both be set to the same `sk_live_...` value to ensure all code paths work correctly.
 
 ### 3. Stripe Webhook Setup
 
@@ -209,6 +212,22 @@ php artisan route:cache
 php artisan view:cache
 php artisan storage:link
 ```
+
+---
+
+## Audit & Corrections (Post-Deploy)
+
+The following bugs were identified and fixed during the production audit:
+
+| # | File | Bug | Fix |
+|---|------|-----|-----|
+| 1 | `app/Models/User.php` | Wrong namespace `App\Models` — project uses `VanguardLTE` | Made it extend `VanguardLTE\User` for Cashier compatibility |
+| 2 | `routes/web.php` | `/deposit/{userId}/{amount}` captured `/deposit/success` and `/deposit/cancel` | Moved static routes before dynamic route |
+| 3 | `app/Http/Controllers/PaymentController.php` | `env('STRIPE_SECRET')` fallback didn't match `STRIPE_SECRET_KEY` | Added both fallbacks: `STRIPE_SECRET_KEY` then `STRIPE_SECRET` |
+| 4 | `app/Http/Middleware/VerifyCsrfToken.php` | `register` without leading slash may not match | Added `/register` alongside `register` |
+| 5 | `app/Http/Kernel.php` | Throttle aliases used invalid `:5,1` syntax in class string | Removed parameters from alias (pass at route level) |
+| 6 | `app/Http/Controllers/PaymentController.php` | `transactions` insert used `type` column (doesn't exist) and missed `direction` (NOT NULL) | Fixed to use correct schema: `direction='add'`, `balance_before`, `balance_after` |
+| 7 | `app/Http/Controllers/PaymentController.php` | Race condition: balance read after increment | Used `lockForUpdate()` to read balance before increment inside transaction |
 
 ---
 

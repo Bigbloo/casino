@@ -1,45 +1,15 @@
 <?php
 
+/**
+ * NOTE: This file is intentionally kept for Laravel Cashier compatibility.
+ * The primary User model for this project is VanguardLTE\User (app/User.php).
+ * This file aliases it so that Laravel Cashier (which expects App\Models\User) works correctly.
+ */
+
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Cashier\Billable;
-use Laravel\Sanctum\HasApiTokens;
-
-class User extends Authenticatable
+// Alias to the real VanguardLTE User model
+class User extends \VanguardLTE\User
 {
-    use HasApiTokens, Billable, HasFactory, Notifiable;
-
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
-
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
-
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-    ];
+    // Inherits everything from VanguardLTE\User
 }

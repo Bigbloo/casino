@@ -6,14 +6,23 @@ use VanguardLTE\Http\Controllers\PaymentController;
 |--------------------------------------------------------------------------
 | Stripe Deposit Routes (Phase 2 - Cashier Integration)
 |--------------------------------------------------------------------------
+| IMPORTANT: Static routes (/deposit/success, /deposit/cancel) MUST be
+| declared BEFORE the dynamic route (/deposit/{userId}/{amount}) to prevent
+| Laravel from matching "success" and "cancel" as {userId} values.
 */
-Route::middleware(['auth', 'siteisclosed', 'checker', 'throttle:10,1'])->group(function () {
-    Route::get('/deposit/{userId}/{amount}', [PaymentController::class, 'checkout'])->name('deposit.checkout');
+Route::middleware(['auth', 'siteisclosed', 'checker'])->group(function () {
+    // Static routes first (must come before the dynamic {userId}/{amount} route)
     Route::get('/deposit/success', [PaymentController::class, 'success'])->name('deposit.success');
     Route::get('/deposit/cancel', [PaymentController::class, 'cancel'])->name('deposit.cancel');
+    // Dynamic checkout route with its own throttle
+    Route::get('/deposit/{userId}/{amount}', [PaymentController::class, 'checkout'])
+        ->name('deposit.checkout')
+        ->middleware('throttle:10,1');
 });
 
 // Stripe Webhook (no auth, no CSRF - handled in VerifyCsrfToken exceptions)
+// Note: /payment/webhook/stripe (TopupController) handles the existing Stripe webhook.
+// This route is the dedicated PaymentController webhook for Cashier-based deposits.
 Route::post('/stripe/webhook', [PaymentController::class, 'webhookStripe'])->name('stripe.webhook');
 
 // PWA Offline page (Phase 3)

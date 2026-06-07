@@ -53,8 +53,8 @@ namespace VanguardLTE\Http
             'disable.legacy' => 'VanguardLTE\Http\Middleware\DisableLegacyFeatures',
             'game.homebutton' => 'VanguardLTE\Http\Middleware\InjectGameHomeButton',
             // Phase 4: Named throttle middleware for specific routes
-            'throttle.login' => 'Illuminate\Routing\Middleware\ThrottleRequests:5,1',
-            'throttle.deposit' => 'Illuminate\Routing\Middleware\ThrottleRequests:10,1',
+            'throttle.login' => 'Illuminate\Routing\Middleware\ThrottleRequests',
+            'throttle.deposit' => 'Illuminate\Routing\Middleware\ThrottleRequests',
         ];
     }
 
